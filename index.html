@@ -22,15 +22,32 @@
             -webkit-tap-highlight-color: transparent;
         }
 
+        /* Latar belakang utama saat layar lebar (Mode Desktop) */
         body { 
-            background: var(--bg); 
+            background: #000000; 
             color: var(--text); 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
             margin: 0;
-            padding: 12px 12px 90px 12px; /* Bottom padding untuk sticky button */
-            display: flex; 
-            flex-direction: column; 
-            gap: 16px; 
+            padding: 0;
+            display: flex;
+            justify-content: center; /* Memposisikan bingkai HP di tengah layar */
+            min-height: 100vh;
+        }
+
+        /* CONTAINER SIMULATOR HP (Paksa Tampilan HP) */
+        .mobile-wrapper {
+            width: 100%;
+            max-width: 480px; /* Lebar maksimal layaknya smartphone */
+            min-height: 100vh;
+            background: var(--bg);
+            padding: 12px 12px 90px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            position: relative;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8); /* Efek bayangan HP di mode desktop */
+            border-left: 1px solid var(--border);
+            border-right: 1px solid var(--border);
         }
 
         h2 {
@@ -188,14 +205,11 @@
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(4px);
-            display: flex; align-items: flex-end; /* Bottom sheet style untuk mobile */
+            display: flex; 
+            align-items: flex-end; /* Mengunci style Bottom Sheet HP */
             justify-content: center;
             z-index: 1000; opacity: 0; pointer-events: none;
             transition: opacity 0.25s ease;
-        }
-
-        @media (min-width: 600px) {
-            .modal-overlay { align-items: center; padding: 20px; }
         }
 
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
@@ -205,7 +219,7 @@
             border: 1px solid var(--accent); 
             border-radius: 16px 16px 0 0;
             width: 100%; 
-            max-width: 500px; 
+            max-width: 480px; /* Menyesuaikan lebar bingkai HP */
             max-height: 85vh;
             padding: 20px;
             box-shadow: 0 -5px 25px rgba(0,0,0,0.5); 
@@ -215,19 +229,8 @@
             flex-direction: column;
         }
 
-        @media (min-width: 600px) {
-            .modal-content {
-                border-radius: 12px;
-                transform: scale(0.9);
-            }
-        }
-
         .modal-overlay.active .modal-content { 
             transform: translateY(0); 
-        }
-
-        @media (min-width: 600px) {
-            .modal-overlay.active .modal-content { transform: scale(1); }
         }
 
         .modal-header { 
@@ -260,12 +263,14 @@
 
         .modal-footer { margin-top: 16px; }
 
-        /* Floating / Sticky Bottom Navigation */
+        /* Bottom Bar Mengunci Bingkai HP */
         .bottom-bar {
             position: fixed;
             bottom: 0;
-            left: 0;
-            right: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
             background: rgba(18, 18, 18, 0.95);
             backdrop-filter: blur(8px);
             padding: 10px 16px;
@@ -290,73 +295,83 @@
 </head>
 <body>
 
-<div class="panel">
-    <h2>Input Data Jendela</h2>
-    <div class="switch-wrapper" onclick="toggleMode()" id="switchBox">
-        <div class="switch-toggle"></div>
-        <div class="switch-text">CURTAIN</div>
-        <div class="switch-text">BLINDS</div>
-    </div>
+<!-- PEMBUNGKUS UTAMA UNTUK MEMAKSA TAMPILAN HP -->
+<div class="mobile-wrapper">
 
-    <input type="text" id="nama" placeholder="Nama Jendela (misal: Ruang Tamu)">
+    <div class="panel">
+        <h2>Input Data Jendela</h2>
+        <div class="switch-wrapper" onclick="toggleMode()" id="switchBox">
+            <div class="switch-toggle"></div>
+            <div class="switch-text">CURTAIN</div>
+            <div class="switch-text">BLINDS</div>
+        </div>
 
-    <div id="curtainFields">
-        <div class="grid-2">
-            <input type="number" step="any" inputmode="decimal" id="lebar" placeholder="Lebar (m)">
-            <input type="number" step="any" inputmode="decimal" id="tinggi" placeholder="Tinggi (m)">
-        </div>
-        <div class="grid-2">
-            <input type="number" step="any" inputmode="decimal" id="hKain" placeholder="Harga Kain/m">
-            <input type="number" step="any" inputmode="decimal" id="hVitras" placeholder="Harga Vitrase/m">
-        </div>
-        
-        <select id="model" onchange="checkModel()">
-            <option value="smokring">Smokring</option>
-            <option value="plisket">Plisket</option>
-            <option value="tabtop">Tab Top</option>
-            <option value="spiral">Spiral</option>
-        </select>
-        
-        <select id="jenisKain">
-            <option value="import">Import</option>
-            <option value="lokal">Lokal</option>
-            <option value="vitrase">Kain Vitrase</option>
-        </select>
-        
-        <div style="display:flex; align-items:center; justify-content:space-between; margin:8px 0;">
-            <label style="font-size: 0.95rem;">Vitrase Tambahan:</label>
-            <button id="btnVitrase" type="button" onclick="toggleVitrase()" style="width:90px; margin:0; min-height:40px;">OFF</button>
-        </div>
-        
-        <div id="vContainer" class="hidden" style="margin-top: 8px;">
-            <select id="vModel" onchange="updateVitraseUI()">
-                <option value="plisket">Vitrase Plisket</option>
-                <option value="spiral">Vitrase Spiral</option>
+        <input type="text" id="nama" placeholder="Nama Jendela (misal: Ruang Tamu)">
+
+        <div id="curtainFields">
+            <div class="grid-2">
+                <input type="number" step="any" inputmode="decimal" id="lebar" placeholder="Lebar (m)">
+                <input type="number" step="any" inputmode="decimal" id="tinggi" placeholder="Tinggi (m)">
+            </div>
+            <div class="grid-2">
+                <input type="number" step="any" inputmode="decimal" id="hKain" placeholder="Harga Kain/m">
+                <input type="number" step="any" inputmode="decimal" id="hVitras" placeholder="Harga Vitrase/m">
+            </div>
+            
+            <select id="model" onchange="checkModel()">
+                <option value="smokring">Smokring</option>
+                <option value="plisket">Plisket</option>
+                <option value="tabtop">Tab Top</option>
+                <option value="spiral">Spiral</option>
             </select>
-            <div id="vInputSpiral" class="grid-2 hidden">
-                <input type="number" step="any" inputmode="decimal" id="vL" placeholder="L (m)">
-                <input type="number" step="any" inputmode="decimal" id="vT" placeholder="T (m)">
-                <input type="number" step="any" inputmode="numeric" id="vQ" placeholder="Qty">
+            
+            <select id="jenisKain">
+                <option value="import">Import</option>
+                <option value="lokal">Lokal</option>
+                <option value="vitrase">Kain Vitrase</option>
+            </select>
+            
+            <div style="display:flex; align-items:center; justify-content:space-between; margin:8px 0;">
+                <label style="font-size: 0.95rem;">Vitrase Tambahan:</label>
+                <button id="btnVitrase" type="button" onclick="toggleVitrase()" style="width:90px; margin:0; min-height:40px;">OFF</button>
+            </div>
+            
+            <div id="vContainer" class="hidden" style="margin-top: 8px;">
+                <select id="vModel" onchange="updateVitraseUI()">
+                    <option value="plisket">Vitrase Plisket</option>
+                    <option value="spiral">Vitrase Spiral</option>
+                </select>
+                <div id="vInputSpiral" class="grid-2 hidden">
+                    <input type="number" step="any" inputmode="decimal" id="vL" placeholder="L (m)">
+                    <input type="number" step="any" inputmode="decimal" id="vT" placeholder="T (m)">
+                    <input type="number" step="any" inputmode="numeric" id="vQ" placeholder="Qty">
+                </div>
             </div>
         </div>
-    </div>
 
-    <div id="blindsFields" class="hidden">
-        <div class="grid-2">
-            <input type="number" step="any" inputmode="decimal" id="bL" placeholder="Lebar (m)">
-            <input type="number" step="any" inputmode="decimal" id="bT" placeholder="Tinggi (m)">
+        <div id="blindsFields" class="hidden">
+            <div class="grid-2">
+                <input type="number" step="any" inputmode="decimal" id="bL" placeholder="Lebar (m)">
+                <input type="number" step="any" inputmode="decimal" id="bT" placeholder="Tinggi (m)">
+            </div>
+            <input type="number" step="any" inputmode="decimal" id="bHarga" placeholder="Harga/m²">
         </div>
-        <input type="number" step="any" inputmode="decimal" id="bHarga" placeholder="Harga/m²">
+
+        <button type="button" onclick="tambah()">+ TAMBAH JENDELA</button>
     </div>
 
-    <button type="button" onclick="tambah()">+ TAMBAH JENDELA</button>
-</div>
+    <div class="panel">
+        <h2>Daftar Jendela</h2>
+        <div id="daftarJendela"></div>
+        <h3 id="totalSemua" style="margin-bottom: 0; color: var(--accent); font-size: 1.1rem; text-align: right;">Total: Rp 0</h3>
+    </div>
 
-<div class="panel">
-    <h2>Daftar Jendela</h2>
-    <div id="daftarJendela"></div>
-    <h3 id="totalSemua" style="margin-bottom: 0; color: var(--accent); font-size: 1.1rem; text-align: right;">Total: Rp 0</h3>
-</div>
+    <!-- BOTTOM BAR FLOATING BUTTON -->
+    <div class="bottom-bar">
+        <button type="button" class="btn-invoice" onclick="lanjutKeInvoice()">LANJUT KE INVOICE ➔</button>
+    </div>
+
+</div> <!-- AKHIR MOBILE WRAPPER -->
 
 <!-- CONTAINER CUSTOM MODAL -->
 <div id="customModal" class="modal-overlay" onclick="tutupModalLuar(event)">
@@ -367,11 +382,6 @@
             <button type="button" onclick="tutupModal()" style="margin: 0;">TUTUP</button>
         </div>
     </div>
-</div>
-
-<!-- BOTTOM BAR FLOATING BUTTON -->
-<div class="bottom-bar">
-    <button type="button" class="btn-invoice" onclick="lanjutKeInvoice()">LANJUT KE INVOICE ➔</button>
 </div>
 
 <script>
