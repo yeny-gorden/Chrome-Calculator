@@ -22,7 +22,6 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* Latar belakang utama saat layar lebar (Mode Desktop) */
         body { 
             background: #000000; 
             color: var(--text); 
@@ -30,14 +29,13 @@
             margin: 0;
             padding: 0;
             display: flex;
-            justify-content: center; /* Memposisikan bingkai HP di tengah layar */
+            justify-content: center;
             min-height: 100vh;
         }
 
-        /* CONTAINER SIMULATOR HP (Paksa Tampilan HP) */
         .mobile-wrapper {
             width: 100%;
-            max-width: 480px; /* Lebar maksimal layaknya smartphone */
+            max-width: 480px;
             min-height: 100vh;
             background: var(--bg);
             padding: 12px 12px 90px 12px;
@@ -45,7 +43,7 @@
             flex-direction: column;
             gap: 16px;
             position: relative;
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8); /* Efek bayangan HP di mode desktop */
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
             border-left: 1px solid var(--border);
             border-right: 1px solid var(--border);
         }
@@ -72,7 +70,6 @@
             gap: 10px; 
         }
 
-        /* Input 16px cegah auto zoom di iOS Safari */
         input, select, button { 
             width: 100%; 
             padding: 12px; 
@@ -110,7 +107,6 @@
 
         .hidden { display: none !important; }
 
-        /* Custom Switch Mode */
         .switch-wrapper { 
             position: relative; 
             width: 100%; 
@@ -144,7 +140,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* Kartu Jendela Mobile */
         .window-card { 
             border: 1px solid var(--border); 
             padding: 12px 14px; 
@@ -199,14 +194,13 @@
             margin: 0;
         }
 
-        /* Custom Modal Adaptif Mobile */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(4px);
             display: flex; 
-            align-items: flex-end; /* Mengunci style Bottom Sheet HP */
+            align-items: flex-end; 
             justify-content: center;
             z-index: 1000; opacity: 0; pointer-events: none;
             transition: opacity 0.25s ease;
@@ -219,7 +213,7 @@
             border: 1px solid var(--accent); 
             border-radius: 16px 16px 0 0;
             width: 100%; 
-            max-width: 480px; /* Menyesuaikan lebar bingkai HP */
+            max-width: 480px; 
             max-height: 85vh;
             padding: 20px;
             box-shadow: 0 -5px 25px rgba(0,0,0,0.5); 
@@ -263,7 +257,6 @@
 
         .modal-footer { margin-top: 16px; }
 
-        /* Bottom Bar Mengunci Bingkai HP */
         .bottom-bar {
             position: fixed;
             bottom: 0;
@@ -295,7 +288,6 @@
 </head>
 <body>
 
-<!-- PEMBUNGKUS UTAMA UNTUK MEMAKSA TAMPILAN HP -->
 <div class="mobile-wrapper">
 
     <div class="panel">
@@ -366,14 +358,12 @@
         <h3 id="totalSemua" style="margin-bottom: 0; color: var(--accent); font-size: 1.1rem; text-align: right;">Total: Rp 0</h3>
     </div>
 
-    <!-- BOTTOM BAR FLOATING BUTTON -->
     <div class="bottom-bar">
         <button type="button" class="btn-invoice" onclick="lanjutKeInvoice()">LANJUT KE INVOICE ➔</button>
     </div>
 
-</div> <!-- AKHIR MOBILE WRAPPER -->
+</div>
 
-<!-- CONTAINER CUSTOM MODAL -->
 <div id="customModal" class="modal-overlay" onclick="tutupModalLuar(event)">
     <div class="modal-content">
         <div id="modalTitle" class="modal-header">Rincian Perhitungan</div>
@@ -391,7 +381,11 @@ const h = { jahit: 20000, smokring: 4500, rollet: 65000, rell: 50000, hook: 4000
 window.addEventListener('DOMContentLoaded', () => {
     const savedList = localStorage.getItem('temp_calc_list');
     if(savedList) {
-        list = JSON.parse(savedList);
+        try {
+            list = JSON.parse(savedList) || [];
+        } catch(e) {
+            list = [];
+        }
         render();
     }
 });
@@ -401,7 +395,11 @@ function checkModel() {
     const btnV = document.getElementById('btnVitrase');
     if(model === 'spiral') {
         document.getElementById('jenisKain').value = 'vitrase';
-        vOn = false; btnV.innerText = "OFF"; btnV.disabled = true;
+        vOn = false; 
+        btnV.innerText = "OFF"; 
+        btnV.style.background = "#2a2a2a";
+        btnV.style.color = "#fff";
+        btnV.disabled = true;
         document.getElementById('vContainer').classList.add('hidden');
     } else {
         btnV.disabled = false;
@@ -431,61 +429,98 @@ function updateVitraseUI() {
 }
 
 function tambah() {
-    let obj = { id: Date.now(), mode, nama: document.getElementById('nama').value || (mode === 'curtain' ? "Gorden" : "Blinds") };
+    const inputNama = document.getElementById('nama').value.trim();
+    let obj = { 
+        id: Date.now(), 
+        mode, 
+        nama: inputNama || (mode === 'curtain' ? "Gorden" : "Blinds") 
+    };
+
     if(mode === 'curtain') {
+        const L = parseFloat(document.getElementById('lebar').value) || 0;
+        const T = parseFloat(document.getElementById('tinggi').value) || 0;
+        if(L <= 0 || T <= 0) {
+            alert("Harap masukkan ukuran Lebar dan Tinggi yang valid.");
+            return;
+        }
+
         Object.assign(obj, { 
-            L: +document.getElementById('lebar').value, 
-            T: +document.getElementById('tinggi').value, 
-            hKain: +document.getElementById('hKain').value, 
-            hVit: +document.getElementById('hVitras').value, 
+            L, 
+            T, 
+            hKain: parseFloat(document.getElementById('hKain').value) || 0, 
+            hVit: parseFloat(document.getElementById('hVitras').value) || 0, 
             model: document.getElementById('model').value, 
             jenis: document.getElementById('jenisKain').value, 
             vOn, 
             vModel: document.getElementById('vModel').value, 
-            vL: +document.getElementById('vL').value, 
-            vT: +document.getElementById('vT').value, 
-            vQ: +document.getElementById('vQ').value 
+            vL: parseFloat(document.getElementById('vL').value) || 0, 
+            vT: parseFloat(document.getElementById('vT').value) || 0, 
+            vQ: parseFloat(document.getElementById('vQ').value) || 0 
         });
     } else {
+        const L = parseFloat(document.getElementById('bL').value) || 0;
+        const T = parseFloat(document.getElementById('bT').value) || 0;
+        if(L <= 0 || T <= 0) {
+            alert("Harap masukkan ukuran Lebar dan Tinggi Blinds yang valid.");
+            return;
+        }
+
         Object.assign(obj, { 
-            h: +document.getElementById('bHarga').value, 
-            L: +document.getElementById('bL').value, 
-            T: +document.getElementById('bT').value 
+            L, 
+            T, 
+            h: parseFloat(document.getElementById('bHarga').value) || 0 
         });
     }
+
     list.push(obj); 
     localStorage.setItem('temp_calc_list', JSON.stringify(list));
     render();
     
-    // Reset form opsional
+    // Reset input nama saja
     document.getElementById('nama').value = '';
 }
 
 function hitung(w) {
-    let items = [], Lc = Math.max(w.L, 1);
+    let items = [], Lc = Math.max(w.L || 0, 1);
     if(w.mode === 'curtain') {
         let mK = (w.jenis === 'lokal') ? Math.ceil((w.L + 0.2) / 0.4) * (w.T + 0.3) : (w.L + 0.2) * 3;
         if(w.model === 'tabtop') mK += 1.0;
         
-        let hargaKain = (w.jenis === 'vitrase') ? w.hVit : w.hKain;
-        items.push({nama: "Kain", qty: mK.toFixed(2)+"m", harga: mK * hargaKain}, {nama: "Jahit Kain", qty: mK.toFixed(2)+"m", harga: mK * h.jahit});
+        let hargaKain = (w.jenis === 'vitrase') ? (w.hVit || 0) : (w.hKain || 0);
+        items.push(
+            {nama: "Kain", qty: mK.toFixed(2)+"m", harga: mK * hargaKain}, 
+            {nama: "Jahit Kain", qty: mK.toFixed(2)+"m", harga: mK * h.jahit}
+        );
         
         if(w.model === 'smokring') {
             let n = Math.ceil(w.L * 24); if(n%2!==0) n++;
             items.push({nama: "Smokring", qty: n+"pcs", harga: n * h.smokring});
         }
         if(['smokring', 'tabtop', 'plisket'].includes(w.model)) {
-            items.push({nama: (w.model === 'plisket' ? "Rell" : "Rollet"), qty: Lc+"m", harga: Lc * (w.model === 'plisket' ? h.rell : h.rollet)}, {nama: "Hook", qty: "1 set", harga: h.hook}, {nama: "Tali", qty: "1 set", harga: h.tali});
-        } else if(w.model === 'spiral') { items.push({nama: "Stick", qty: "1pcs", harga: h.stick}); }
+            items.push(
+                {nama: (w.model === 'plisket' ? "Rell" : "Rollet"), qty: Lc+"m", harga: Lc * (w.model === 'plisket' ? h.rell : h.rollet)}, 
+                {nama: "Hook", qty: "1 set", harga: h.hook}, 
+                {nama: "Tali", qty: "1 set", harga: h.tali}
+            );
+        } else if(w.model === 'spiral') { 
+            items.push({nama: "Stick", qty: "1pcs", harga: h.stick}); 
+        }
         
         if(w.vOn) {
-            let mKvit = (w.vModel === 'spiral') ? (w.vL * w.vQ) : (w.L + 0.2) * 3;
-            items.push({nama: "Vitrase", qty: mKvit.toFixed(2)+"m", harga: mKvit * w.hVit}, {nama: "Jahit Vitrase", qty: mKvit.toFixed(2)+"m", harga: mKvit * h.jahit}, {nama: "Rell", qty: Lc+"m", harga: Lc * h.rell});
+            let mKvit = (w.vModel === 'spiral') ? ((w.vL || 0) * (w.vQ || 0)) : (w.L + 0.2) * 3;
+            items.push(
+                {nama: "Vitrase", qty: mKvit.toFixed(2)+"m", harga: mKvit * (w.hVit || 0)}, 
+                {nama: "Jahit Vitrase", qty: mKvit.toFixed(2)+"m", harga: mKvit * h.jahit}, 
+                {nama: "Rell", qty: Lc+"m", harga: Lc * h.rell}
+            );
         }
         items.push({nama: "Instalasi", qty: Lc+"m", harga: Lc * h.instalasi});
     } else {
-        let luas = Math.max(w.L, 1) * Math.max(w.T, 1);
-        items.push({nama: "Blinds", qty: luas+"m²", harga: luas * w.h}, {nama: "Instalasi", qty: Lc+"m", harga: Lc * h.instalasi});
+        let luas = Math.max(w.L || 0, 1) * Math.max(w.T || 0, 1);
+        items.push(
+            {nama: "Blinds", qty: luas.toFixed(2)+"m²", harga: luas * (w.h || 0)}, 
+            {nama: "Instalasi", qty: Lc+"m", harga: Lc * h.instalasi}
+        );
     }
     return { items, total: items.reduce((s, i) => s + i.harga, 0) };
 }
@@ -501,7 +536,7 @@ function render() {
             return `<div class="window-card">
                 <div class="window-card-header">
                     <span class="window-title">${w.nama}</span>
-                    <span class="window-price">Rp ${res.total.toLocaleString()}</span>
+                    <span class="window-price">Rp ${Math.round(res.total).toLocaleString()}</span>
                 </div>
                 <div class="window-actions">
                     <button type="button" class="btn-detail" onclick="bukaModal('${secureData}')">Detail</button>
@@ -510,7 +545,7 @@ function render() {
             </div>`;
         }).join('');
     }
-    document.getElementById('totalSemua').innerText = "Total Semua: Rp " + grand.toLocaleString();
+    document.getElementById('totalSemua').innerText = "Total Semua: Rp " + Math.round(grand).toLocaleString();
 }
 
 function hapusItem(id) {
@@ -546,22 +581,22 @@ function tutupModal() { document.getElementById('customModal').classList.remove(
 function tutupModalLuar(event) { if (event.target.id === 'customModal') tutupModal(); }
 
 function lanjutKeInvoice() {
-    let dataInvoice = [];
-    if (list.length > 0) {
-        dataInvoice = list.map(w => {
-            let hasilHitung = hitung(w);
-            return {
-                namaItem: w.nama,
-                totalHarga: hasilHitung.total
-            };
-        });
-        localStorage.removeItem('temp_calc_list');
+    if (list.length === 0) {
+        alert("Tambahkan minimal 1 jendela sebelum membuat invoice.");
+        return;
     }
+    const dataInvoice = list.map(w => {
+        let hasilHitung = hitung(w);
+        return {
+            namaItem: w.nama,
+            items: hasilHitung.items,
+            totalHarga: Math.round(hasilHitung.total)
+        };
+    });
     localStorage.setItem('invoiceItems', JSON.stringify(dataInvoice));
     window.location.href = 'invoice.html';
 }
 
-// Registrasi Service Worker untuk PWA
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
