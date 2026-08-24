@@ -255,6 +255,22 @@
         
         .detail-row:last-child { border-bottom: none; }
 
+        .detail-row-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .detail-row-checkbox input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            min-height: 20px;
+            margin: 0;
+            cursor: pointer;
+            accent-color: var(--accent);
+        }
+
         .modal-footer { margin-top: 16px; }
 
         .bottom-bar {
@@ -355,7 +371,7 @@
     <div class="panel">
         <h2>Daftar Jendela</h2>
         <div id="daftarJendela"></div>
-        <h3 id="totalSemua" style="margin-bottom: 0; color: var(--accent); font-size: 1.1rem; text-align: right;">Total: Rp 0</h3>
+        <h3 id="totalSemua" style="margin-bottom: 0; color: var(--accent); font-size: 1.1rem; text-align: right;">Total Semua: Rp 0</h3>
     </div>
 
     <div class="bottom-bar">
@@ -375,7 +391,9 @@
 </div>
 
 <script>
-let list = []; let mode = 'curtain'; let vOn = false;
+let list = []; 
+let mode = 'curtain'; 
+let vOn = false;
 const h = { jahit: 20000, smokring: 4500, rollet: 65000, rell: 50000, hook: 40000, tali: 50000, stick: 50000, instalasi: 50000 };
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -430,20 +448,36 @@ function updateVitraseUI() {
 
 function tambah() {
     const inputNama = document.getElementById('nama').value.trim();
-    let obj = { 
-        id: Date.now(), 
-        mode, 
-        nama: inputNama || (mode === 'curtain' ? "Gorden" : "Blinds") 
-    };
+    let L = 0, T = 0;
 
     if(mode === 'curtain') {
-        const L = parseFloat(document.getElementById('lebar').value) || 0;
-        const T = parseFloat(document.getElementById('tinggi').value) || 0;
+        L = parseFloat(document.getElementById('lebar').value) || 0;
+        T = parseFloat(document.getElementById('tinggi').value) || 0;
         if(L <= 0 || T <= 0) {
             alert("Harap masukkan ukuran Lebar dan Tinggi yang valid.");
             return;
         }
+    } else {
+        L = parseFloat(document.getElementById('bL').value) || 0;
+        T = parseFloat(document.getElementById('bT').value) || 0;
+        if(L <= 0 || T <= 0) {
+            alert("Harap masukkan ukuran Lebar dan Tinggi Blinds yang valid.");
+            return;
+        }
+    }
 
+    // Penambahan format ukuran di belakang nama
+    const baseNama = inputNama || (mode === 'curtain' ? "Gorden" : "Blinds");
+    const namaLengkap = `${baseNama} (${L}x${T}m)`;
+
+    let obj = { 
+        id: Date.now(), 
+        mode, 
+        nama: namaLengkap,
+        disabledItems: {} 
+    };
+
+    if(mode === 'curtain') {
         Object.assign(obj, { 
             L, 
             T, 
@@ -458,13 +492,6 @@ function tambah() {
             vQ: parseFloat(document.getElementById('vQ').value) || 0 
         });
     } else {
-        const L = parseFloat(document.getElementById('bL').value) || 0;
-        const T = parseFloat(document.getElementById('bT').value) || 0;
-        if(L <= 0 || T <= 0) {
-            alert("Harap masukkan ukuran Lebar dan Tinggi Blinds yang valid.");
-            return;
-        }
-
         Object.assign(obj, { 
             L, 
             T, 
@@ -476,53 +503,70 @@ function tambah() {
     localStorage.setItem('temp_calc_list', JSON.stringify(list));
     render();
     
-    // Reset input nama saja
     document.getElementById('nama').value = '';
 }
 
 function hitung(w) {
     let items = [], Lc = Math.max(w.L || 0, 1);
+    const savedChecks = w.disabledItems || {};
+
+    const addItem = (id, nama, qty, harga) => {
+        items.push({
+            id: id,
+            nama: nama,
+            qty: qty,
+            harga: harga,
+            checked: savedChecks[id] !== undefined ? savedChecks[id] : true
+        });
+    };
+
     if(w.mode === 'curtain') {
         let mK = (w.jenis === 'lokal') ? Math.ceil((w.L + 0.2) / 0.4) * (w.T + 0.3) : (w.L + 0.2) * 3;
         if(w.model === 'tabtop') mK += 1.0;
         
         let hargaKain = (w.jenis === 'vitrase') ? (w.hVit || 0) : (w.hKain || 0);
-        items.push(
-            {nama: "Kain", qty: mK.toFixed(2)+"m", harga: mK * hargaKain}, 
-            {nama: "Jahit Kain", qty: mK.toFixed(2)+"m", harga: mK * h.jahit}
-        );
+        addItem('kain', "Kain", mK.toFixed(2)+"m", mK * hargaKain);
+        addItem('jahit', "Jahit Kain", mK.toFixed(2)+"m", mK * h.jahit);
         
         if(w.model === 'smokring') {
             let n = Math.ceil(w.L * 24); if(n%2!==0) n++;
-            items.push({nama: "Smokring", qty: n+"pcs", harga: n * h.smokring});
+            addItem('smokring', "Smokring", n+"pcs", n * h.smokring);
         }
         if(['smokring', 'tabtop', 'plisket'].includes(w.model)) {
-            items.push(
-                {nama: (w.model === 'plisket' ? "Rell" : "Rollet"), qty: Lc+"m", harga: Lc * (w.model === 'plisket' ? h.rell : h.rollet)}, 
-                {nama: "Hook", qty: "1 set", harga: h.hook}, 
-                {nama: "Tali", qty: "1 set", harga: h.tali}
-            );
+            addItem('rel', (w.model === 'plisket' ? "Rell" : "Rollet"), Lc+"m", Lc * (w.model === 'plisket' ? h.rell : h.rollet));
+            addItem('hook', "Hook", "1 set", h.hook);
+            addItem('tali', "Tali", "1 set", h.tali);
         } else if(w.model === 'spiral') { 
-            items.push({nama: "Stick", qty: "1pcs", harga: h.stick}); 
+            addItem('stick', "Stick", "1pcs", h.stick); 
         }
         
         if(w.vOn) {
             let mKvit = (w.vModel === 'spiral') ? ((w.vL || 0) * (w.vQ || 0)) : (w.L + 0.2) * 3;
-            items.push(
-                {nama: "Vitrase", qty: mKvit.toFixed(2)+"m", harga: mKvit * (w.hVit || 0)}, 
-                {nama: "Jahit Vitrase", qty: mKvit.toFixed(2)+"m", harga: mKvit * h.jahit}, 
-                {nama: "Rell", qty: Lc+"m", harga: Lc * h.rell}
-            );
+            addItem('vitrase', "Vitrase", mKvit.toFixed(2)+"m", mKvit * (w.hVit || 0));
+            addItem('jahit_vitrase', "Jahit Vitrase", mKvit.toFixed(2)+"m", mKvit * h.jahit);
+            addItem('v_rell', "Rell Vitrase", Lc+"m", Lc * h.rell);
         }
-        items.push({nama: "Instalasi", qty: Lc+"m", harga: Lc * h.instalasi});
+        addItem('instalasi', "Instalasi", Lc+"m", Lc * h.instalasi);
     } else {
         let luas = Math.max(w.L || 0, 1) * Math.max(w.T || 0, 1);
-        items.push(
-            {nama: "Blinds", qty: luas.toFixed(2)+"m²", harga: luas * (w.h || 0)}, 
-            {nama: "Instalasi", qty: Lc+"m", harga: Lc * h.instalasi}
-        );
+        items.push({
+            id: 'blinds',
+            nama: "Blinds",
+            qty: luas.toFixed(2)+"m²",
+            harga: luas * (w.h || 0),
+            checked: true
+        });
+        items.push({
+            id: 'instalasi',
+            nama: "Instalasi",
+            qty: Lc+"m",
+            harga: Lc * h.instalasi,
+            checked: true
+        });
     }
-    return { items, total: items.reduce((s, i) => s + i.harga, 0) };
+
+    let total = items.reduce((s, i) => s + (i.checked ? i.harga : 0), 0);
+    return { items, total };
 }
 
 function render() {
@@ -532,14 +576,13 @@ function render() {
     } else {
         cont.innerHTML = list.map(w => {
             let res = hitung(w); grand += res.total;
-            let secureData = encodeURIComponent(JSON.stringify({ nama: w.nama, items: res.items, total: res.total }));
             return `<div class="window-card">
                 <div class="window-card-header">
                     <span class="window-title">${w.nama}</span>
                     <span class="window-price">Rp ${Math.round(res.total).toLocaleString()}</span>
                 </div>
                 <div class="window-actions">
-                    <button type="button" class="btn-detail" onclick="bukaModal('${secureData}')">Detail</button>
+                    <button type="button" class="btn-detail" onclick="bukaModal(${w.id})">Detail</button>
                     <button type="button" class="btn-delete" onclick="hapusItem(${w.id})">Hapus</button>
                 </div>
             </div>`;
@@ -554,39 +597,66 @@ function hapusItem(id) {
     render();
 }
 
-function bukaModal(encodedData) {
-    const data = JSON.parse(decodeURIComponent(encodedData));
-    document.getElementById('modalTitle').innerText = "Rincian: " + data.nama;
+function bukaModal(idWindow) {
+    const w = list.find(x => x.id === idWindow);
+    if (!w) return;
+
+    if (!w.disabledItems) w.disabledItems = {};
+
+    document.getElementById('modalTitle').innerText = "Rincian: " + w.nama;
+    let res = hitung(w);
     let bodyHtml = '';
-    data.items.forEach(item => {
+
+    res.items.forEach(item => {
+        const isCurtain = (w.mode === 'curtain');
+        const isChecked = item.checked ? 'checked' : '';
+        
         bodyHtml += `
             <div class="detail-row">
-                <div>
-                    <div style="font-weight: bold; color:#fff;">${item.nama}</div>
-                    <div style="font-size: 0.8rem; color: var(--text-sub);">Qty: ${item.qty}</div>
+                <div class="detail-row-checkbox">
+                    ${isCurtain ? `<input type="checkbox" ${isChecked} onchange="toggleItemCheck(${w.id}, '${item.id}', this.checked)">` : ''}
+                    <div>
+                        <div style="font-weight: bold; color:#fff;">${item.nama}</div>
+                        <div style="font-size: 0.8rem; color: var(--text-sub);">Qty: ${item.qty}</div>
+                    </div>
                 </div>
                 <div style="font-weight: bold; color: var(--accent);">Rp ${Math.round(item.harga).toLocaleString()}</div>
             </div>`;
     });
+
     bodyHtml += `
         <div class="detail-row" style="border-top: 2px solid var(--accent); margin-top: 10px; padding-top: 12px; font-size: 1.05rem;">
             <strong>TOTAL AKHIR</strong>
-            <strong style="color: #4af2a1;">Rp ${Math.round(data.total).toLocaleString()}</strong>
+            <strong id="modalTotalHarga" style="color: #4af2a1;">Rp ${Math.round(res.total).toLocaleString()}</strong>
         </div>`;
+
     document.getElementById('modalBody').innerHTML = bodyHtml;
     document.getElementById('customModal').classList.add('active');
+}
+
+function toggleItemCheck(windowId, itemId, isChecked) {
+    let windowItem = list.find(x => x.id === windowId);
+    if (windowItem) {
+        if (!windowItem.disabledItems) windowItem.disabledItems = {};
+        windowItem.disabledItems[itemId] = isChecked;
+        
+        localStorage.setItem('temp_calc_list', JSON.stringify(list));
+        
+        let res = hitung(windowItem);
+        document.getElementById('modalTotalHarga').innerText = "Rp " + Math.round(res.total).toLocaleString();
+        render();
+    }
 }
 
 function tutupModal() { document.getElementById('customModal').classList.remove('active'); }
 function tutupModalLuar(event) { if (event.target.id === 'customModal') tutupModal(); }
 
 function lanjutKeInvoice() {
-    // Opsi 1: Pengecekan list.length === 0 dihapus
     const dataInvoice = list.map(w => {
         let hasilHitung = hitung(w);
         return {
             namaItem: w.nama,
-            items: hasilHitung.items,
+            items: hasilHitung.items.filter(i => i.checked),
             totalHarga: Math.round(hasilHitung.total)
         };
     });
