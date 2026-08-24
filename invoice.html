@@ -139,7 +139,6 @@
             transform: translateY(1px);
             box-shadow: 0 2px 4px rgba(154, 52, 18, 0.2);
         }
-        /* Efek Berkilau Glimmer / Shimmer */
         .login-box button.btn-animate::after {
             content: '';
             position: absolute;
@@ -162,7 +161,6 @@
             100% { left: 140%; }
         }
 
-        /* Animasi Putar Spinner */
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -267,14 +265,33 @@
             letter-spacing: 0.3px;
         }
 
+        /* --- POP-UP OVERLAY SCANNER KAMERA --- */
         #scanner-area {
-            max-width: 850px;
-            margin: 0 auto 20px auto;
-            background: #fff;
-            padding: 20px;
-            border-radius: 12px;
-            border: 3px dashed var(--accent);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(4px);
+            z-index: 10001;
             display: none;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+            padding: 20px;
+        }
+
+        .scanner-box {
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);
+            border-top: 6px solid var(--accent);
+            text-align: center;
+            animation: slideIn 0.25s ease-out;
         }
 
         .action-bar { max-width: 850px; margin: 25px auto 0 auto; display: flex; justify-content: space-between; gap: 10px; align-items: center; }
@@ -310,7 +327,6 @@
             display: inline-block;
         }
 
-        /* --- NOTIFIKASI INDIKATOR OFFLINE --- */
         #offline-indicator {
             position: fixed;
             bottom: 20px;
@@ -391,10 +407,12 @@
 </div>
 
 <div id="scanner-area">
-    <h3 style="margin-top: 0; color: var(--accent); font-weight: 800;">Kamera Scanner Yeny Gorden</h3>
-    <p style="font-size: 14px; color: #334155; font-weight: 500;">Arahkan kamera ke QR Code nota pelanggan untuk pelunasan termin.</p>
-    <div id="reader" style="width: 100%; max-width: 400px; margin: 0 auto;"></div>
-    <button class="btn btn-delete" style="display: block; margin: 10px auto 0 auto;" onclick="toggleScanner()">Tutup Kamera</button>
+    <div class="scanner-box">
+        <h3 style="margin-top: 0; color: var(--accent); font-weight: 800;">Kamera Scanner Yeny Gorden</h3>
+        <p style="font-size: 14px; color: #334155; font-weight: 500;">Arahkan kamera ke QR Code nota pelanggan untuk pelunasan termin.</p>
+        <div id="reader" style="width: 100%; max-width: 400px; margin: 0 auto;"></div>
+        <button class="btn btn-delete" style="display: block; margin: 15px auto 0 auto;" onclick="toggleScanner()">Tutup Kamera</button>
+    </div>
 </div>
 
 <div class="invoice-container">
@@ -446,7 +464,6 @@
             </tr>
         </thead>
         <tbody>
-            <!-- Data item gorden masuk disini -->
         </tbody>
     </table>
 
@@ -514,7 +531,6 @@
     </div>
 </div>
 
-<!-- --- FLOATING MENU INPUT PEMBAYARAN TERMIN --- -->
 <div id="floating-payment-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 9999; display: none; justify-content: center; align-items: center;">
     <div style="background: #ffffff; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); border-top: 6px solid #166534;">
         <h3 id="float-modal-title" style="margin: 0 0 5px 0; color: #0f172a; font-weight: 800; font-size: 18px;">Input Pembayaran Termin</h3>
@@ -542,12 +558,10 @@
     </div>
 </div>
 
-<!-- SCRIPT SDK FIREBASE & LOGIK HIBRIDA (FIREBASE + GOOGLE SHEETS) -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, setDoc, getDoc, updateDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // 1. KONFIGURASI FIREBASE ASLI
     const firebaseConfig = {
       apiKey: "AIzaSyCD_3C4xY97O0RyQ1Dp8EYzGfp-_vey9Zo",
       authDomain: "kalkulator-gorden-pwa.firebaseapp.com",
@@ -559,13 +573,11 @@
       measurementId: "G-3QKXHLFMRM"
     };
 
-    // Inisialisasi Firebase & Aktifkan Fitur Offline Tangguh Cache Browser
     const app = initializeApp(firebaseConfig);
     const db = initializeFirestore(app, {
         localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
     });
 
-    // 2. URL GOOGLE APPS SCRIPT (SINKRONISASI SHEETS)
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwQa_N0nci3C_j4tIBcyhi_gt3wNj8xkEsgeEoZ84wzjqjbmEzKj_XR18OKz0yqc0U/exec";
 
     let namaKasirAktif = "";
@@ -574,7 +586,6 @@
     let currentAlertCallback = null;
     let dataNotaTerpilih = null;
 
-    // --- UTILITY MODAL SYSTEM ---
     window.showCustomAlert = function(title, message, type = "alert", defaultValue = "", callback = null) {
         document.getElementById('alert-title').innerText = title;
         document.getElementById('alert-message').innerText = message;
@@ -655,14 +666,12 @@
         window.addEventListener('offline', () => document.getElementById('offline-indicator').style.display = 'block');
     };
 
-    // --- 1. PROSES LOGIN KASIR (DENGAN INDIKATOR VERIFIKASI AKTIF) ---
     window.prosesLogin = async function() {
         const idKasir = document.getElementById('login-id').value.trim();
         const pinKasir = document.getElementById('login-pin').value.trim();
 
         if (!idKasir || !pinKasir) { showCustomAlert("Peringatan", "ID Kasir dan PIN tidak boleh kosong!"); return; }
 
-        // Aktifkan animasi putar & teks memverifikasi
         const btnSubmit = document.getElementById('btn-login-submit');
         const btnText = document.getElementById('btn-login-text');
         const btnSpinner = document.getElementById('btn-login-spinner');
@@ -710,7 +719,6 @@
         }
     }
 
-    // --- 2. PROSES GANTI PIN (FIREBASE FIRESTORE) ---
     window.prosesGantiPIN = async function() {
         const p1 = document.getElementById('pin-baru-1').value.trim();
         const p2 = document.getElementById('pin-baru-2').value.trim();
@@ -732,7 +740,6 @@
         }
     }
 
-    // --- TABLE MANAGER ---
     window.addNewRow = function() {
         const tableBody = document.getElementById('invoice-table').getElementsByTagName('tbody')[0];
         const row = tableBody.insertRow();
@@ -750,7 +757,6 @@
         calculateTotal();
     }
 
-    // --- LOGIKA HITUNG TOTAL & PENYESUAIAN SYARAT & KETENTUAN OTOMATIS (PEMBULATAN OPSI A) ---
     window.calculateTotal = function() {
         const rows = document.getElementById('invoice-table').getElementsByTagName('tbody')[0].rows;
         let subtotal = 0;
@@ -790,7 +796,6 @@
         const totalAfterDiscount = subtotal - discountCalculated;
         const ppnAmount = (ppnRate / 100) * totalAfterDiscount;
         
-        // OPSI A: Pembulatan ke atas ke ratusan terdekat
         const rawGrandTotal = totalAfterDiscount + ppnAmount + shippingCost;
         const grandTotal = Math.ceil(rawGrandTotal / 100) * 100;
 
@@ -804,7 +809,6 @@
         const invoiceTitle = document.querySelector('.invoice-meta-title h2');
         const termsContent = document.getElementById('terms-content');
 
-        // Modifikasi Otomatis Teks S&K Berdasarkan Status Dokumen Aktif
         if (sisaAkhir <= 0 && subtotal > 0) {
             isLunas = true;
             document.getElementById('stamp').style.display = 'block';
@@ -842,7 +846,6 @@
         qrcode.makeCode(noNota); 
     }
 
-    // --- 3. SAVE ACTION HIBRIDA (FIREBASE FIRESTORE + GOOGLE SHEETS SINKRONISASI) ---
     window.simpanKeGoogleSheets = async function(bukaCetakSetelahSelesai = false) {
         const nota = document.getElementById('nota-num').value || '-';
         
@@ -941,7 +944,6 @@
         calculateTotal();
     }
 
-    // --- 4. INPUT PEMBAYARAN TERMIN DENGAN UPDATE FIREBASE CLOUD ---
     window.openFloatingPayment = function(data) {
         const sisa = parseFloat(data.sisa) || 0;
         if (sisa <= 0) { showCustomAlert("Selesai", "Nota ini sudah LUNAS."); return; }
@@ -1018,7 +1020,6 @@
         }
     }
 
-    // --- 5. SEARCH & KAMERA SCAN QR BERBASIS FIRESTORE DATASET ---
     window.cariNotaManual = async function() {
         const noNota = document.getElementById('search-nota').value.trim();
         if (!noNota) { showCustomAlert("Peringatan", "Masukkan nomor nota!"); return; }
@@ -1039,11 +1040,11 @@
 
     window.toggleScanner = function() {
         const area = document.getElementById('scanner-area');
-        if (area.style.display === 'block') {
+        if (area.style.display === 'flex') {
             area.style.display = 'none';
             if (html5QrcodeScanner) html5QrcodeScanner.stop().catch(() => {});
         } else {
-            area.style.display = 'block';
+            area.style.display = 'flex';
             runScanner();
         }
     }
