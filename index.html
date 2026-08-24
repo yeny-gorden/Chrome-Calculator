@@ -581,10 +581,7 @@ function tutupModal() { document.getElementById('customModal').classList.remove(
 function tutupModalLuar(event) { if (event.target.id === 'customModal') tutupModal(); }
 
 function lanjutKeInvoice() {
-    if (list.length === 0) {
-        alert("Tambahkan minimal 1 jendela sebelum membuat invoice.");
-        return;
-    }
+    // Opsi 1: Pengecekan list.length === 0 dihapus
     const dataInvoice = list.map(w => {
         let hasilHitung = hitung(w);
         return {
