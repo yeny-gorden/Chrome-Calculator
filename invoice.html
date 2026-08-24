@@ -547,7 +547,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, setDoc, getDoc, updateDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // 1. KONFIGURASI FIREBASE ASLI ANDA
+    // 1. KONFIGURASI FIREBASE ASLI
     const firebaseConfig = {
       apiKey: "AIzaSyCD_3C4xY97O0RyQ1Dp8EYzGfp-_vey9Zo",
       authDomain: "kalkulator-gorden-pwa.firebaseapp.com",
@@ -750,7 +750,7 @@
         calculateTotal();
     }
 
-    // --- LOGIKA HITUNG TOTAL & PENYESUAIAN SYARAT & KETENTUAN OTOMATIS ---
+    // --- LOGIKA HITUNG TOTAL & PENYESUAIAN SYARAT & KETENTUAN OTOMATIS (PEMBULATAN OPSI A) ---
     window.calculateTotal = function() {
         const rows = document.getElementById('invoice-table').getElementsByTagName('tbody')[0].rows;
         let subtotal = 0;
@@ -790,7 +790,10 @@
         const totalAfterDiscount = subtotal - discountCalculated;
         const ppnAmount = (ppnRate / 100) * totalAfterDiscount;
         
-        const grandTotal = totalAfterDiscount + ppnAmount + shippingCost;
+        // OPSI A: Pembulatan ke atas ke ratusan terdekat
+        const rawGrandTotal = totalAfterDiscount + ppnAmount + shippingCost;
+        const grandTotal = Math.ceil(rawGrandTotal / 100) * 100;
+
         const dp = parseFloat(document.getElementById('dp-amount').value) || 0;
         
         let sisaAkhir = grandTotal - dp;
